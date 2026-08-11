@@ -167,7 +167,7 @@
   <button class="btn-generate" id="genBtn" onclick="generateLink()">Generate Short Link</button>
 
   <div class="output-group" id="outputSection">
-    <label id="outputLabel">Dub.co Shortened Link:</label>
+    <label id="outputLabel">Shortened Link:</label>
     <div class="output-box" id="outputUrl"></div>
     <div class="btn-action-group">
       <button class="btn-action" onclick="copyLink()">📋 Copy Link</button>
@@ -177,9 +177,6 @@
 </div>
 
 <script>
-  // 🔑 Your Dub.co API Key
-  const DUB_API_KEY = "dub_iV89cpeGxCzk78D73Yo2BIKc"; 
-
   async function generateLink() {
     let rawDigits = document.getElementById('phoneNum').value.trim().replace(/[^0-9]/g, '');
     let message = document.getElementById('message').value.trim();
@@ -202,11 +199,14 @@
     document.getElementById('genBtn').innerText = "Generating Short Link...";
 
     try {
-      if (!DUB_API_KEY) {
-        throw new Error("API key is missing.");
+      // TinyURL Plain API Call (Native CORS support for browser fetch)
+      let response = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(finalWaUrl)}`);
+      
+      if (!response.ok) {
+        throw new Error("Shortening request failed");
       }
 
-      let shortUrl = await shortenWithDub(finalWaUrl);
+      let shortUrl = await response.text();
       document.getElementById('outputUrl').innerText = shortUrl;
       document.getElementById('testBtn').href = shortUrl;
       document.getElementById('outputSection').style.display = 'block';
@@ -219,28 +219,6 @@
     } finally {
       document.getElementById('genBtn').innerText = "Generate Short Link";
     }
-  }
-
-  async function shortenWithDub(longUrl) {
-    // Direct REST API call for live https:// sites
-    let response = await fetch('https://api.dub.co/links', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${DUB_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        url: longUrl
-      })
-    });
-
-    let data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error ? data.error.message : "Dub.co API request failed");
-    }
-
-    return data.shortLink;
   }
 
   function copyLink() {
