@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KPV WhatsApp DM Link Generator</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+    body {
+      background-color: #f4f7f6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    .card {
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      width: 100%;
+      max-width: 500px;
+    }
+    h2 {
+      margin-top: 0;
+      color: #075e54;
+      font-size: 22px;
+      text-align: center;
+    }
+    .form-group {
+      margin-bottom: 18px;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #333;
+      font-size: 14px;
+    }
+    .phone-input-group {
+      display: flex;
+      align-items: center;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #f9f9f9;
+    }
+    .phone-prefix {
+      padding: 10px 12px;
+      background: #e9ecef;
+      color: #495057;
+      font-weight: bold;
+      font-size: 14px;
+      border-right: 1px solid #ccc;
+      user-select: none;
+      white-space: nowrap;
+    }
+    .phone-input-group input {
+      border: none;
+      border-radius: 0;
+      background: transparent;
+      padding: 10px 12px;
+      width: 100%;
+      font-size: 14px;
+    }
+    .phone-input-group input:focus {
+      outline: none;
+    }
+    .phone-input-group:focus-within {
+      border-color: #25d366;
+    }
+    textarea, input[type="text"]:not(#phoneNum) {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+    textarea:focus, input[type="text"]:not(#phoneNum):focus {
+      outline: none;
+      border-color: #25d366;
+    }
+    button.btn-generate {
+      width: 100%;
+      background-color: #25d366;
+      color: white;
+      border: none;
+      padding: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    button.btn-generate:hover {
+      background-color: #128c7e;
+    }
+    .output-group {
+      margin-top: 24px;
+      padding-top: 18px;
+      border-top: 1px dashed #e0e0e0;
+      display: none;
+    }
+    .output-box {
+      width: 100%;
+      background: #f9f9f9;
+      border: 1px solid #e0e0e0;
+      padding: 10px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 13px;
+      word-break: break-all;
+      margin-bottom: 10px;
+    }
+    .btn-action-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .btn-action {
+      padding: 8px 12px;
+      border: 1px solid #075e54;
+      background: white;
+      color: #075e54;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      font-size: 13px;
+    }
+    .btn-action:hover {
+      background: #075e54;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h2>WhatsApp DM Link Generator</h2>
+  
+  <div class="form-group">
+    <label for="phoneNum">1. DM Phone Number:</label>
+    <div class="phone-input-group">
+      <span class="phone-prefix">+856 20</span>
+      <input type="text" id="phoneNum" placeholder="59591916" maxlength="8">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="message">2. Message:</label>
+    <textarea id="message" rows="3" placeholder="I like this product, give me more details please"></textarea>
+  </div>
+
+  <div class="form-group">
+    <label for="media">3. Media Link (Optional):</label>
+    <input type="text" id="media" placeholder="https://drive.google.com/file/d/...">
+  </div>
+
+  <button class="btn-generate" id="genBtn" onclick="generateLink()">Generate Short Link</button>
+
+  <div class="output-group" id="outputSection">
+    <label id="outputLabel">Dub.co Shortened Link:</label>
+    <div class="output-box" id="outputUrl"></div>
+    <div class="btn-action-group">
+      <button class="btn-action" onclick="copyLink()">📋 Copy Link</button>
+      <a class="btn-action" id="testBtn" target="_blank">🚀 Test Link</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 🔑 Your Dub.co API Key
+  const DUB_API_KEY = "dub_iV89cpeGxCzk78D73Yo2BIKc"; 
+
+  async function generateLink() {
+    let rawDigits = document.getElementById('phoneNum').value.trim().replace(/[^0-9]/g, '');
+    let message = document.getElementById('message').value.trim();
+    let media = document.getElementById('media').value.trim();
+
+    if (!rawDigits) {
+      alert('Please enter the remaining phone digits!');
+      return;
+    }
+
+    let fullPhoneNumber = `85620${rawDigits}`;
+    let fullText = message;
+    if (media) {
+      fullText = message ? `${message}: ${media}` : media;
+    }
+
+    let encodedText = encodeURIComponent(fullText);
+    let finalWaUrl = `https://wa.me/${fullPhoneNumber}?text=${encodedText}`;
+
+    document.getElementById('genBtn').innerText = "Generating Short Link...";
+
+    try {
+      if (!DUB_API_KEY) {
+        throw new Error("API key is missing.");
+      }
+
+      let shortUrl = await shortenWithDub(finalWaUrl);
+      document.getElementById('outputUrl').innerText = shortUrl;
+      document.getElementById('testBtn').href = shortUrl;
+      document.getElementById('outputSection').style.display = 'block';
+    } catch (err) {
+      console.error(err);
+      alert("Error: " + err.message + "\n\nFallback to full wa.me link.");
+      document.getElementById('outputUrl').innerText = finalWaUrl;
+      document.getElementById('testBtn').href = finalWaUrl;
+      document.getElementById('outputSection').style.display = 'block';
+    } finally {
+      document.getElementById('genBtn').innerText = "Generate Short Link";
+    }
+  }
+
+  async function shortenWithDub(longUrl) {
+    // Direct REST API call for live https:// sites
+    let response = await fetch('https://api.dub.co/links', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${DUB_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        url: longUrl
+      })
+    });
+
+    let data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error ? data.error.message : "Dub.co API request failed");
+    }
+
+    return data.shortLink;
+  }
+
+  function copyLink() {
+    let linkText = document.getElementById('outputUrl').innerText;
+    navigator.clipboard.writeText(linkText).then(() => {
+      alert('Link copied to clipboard!');
+    });
+  }
+</script>
+
+</body>
+</html>
