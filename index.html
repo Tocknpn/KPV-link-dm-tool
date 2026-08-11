@@ -199,7 +199,7 @@
     document.getElementById('genBtn').innerText = "Generating Short Link...";
 
     try {
-      let shortUrl = await shortenWithDubProxy(finalWaUrl);
+      let shortUrl = await shortenWithShortIoProxy(finalWaUrl, message);
       document.getElementById('outputUrl').innerText = shortUrl;
       document.getElementById('testBtn').href = shortUrl;
       document.getElementById('outputSection').style.display = 'block';
@@ -214,8 +214,7 @@
     }
   }
 
-  async function shortenWithDubProxy(longUrl) {
-    // Calling your brand new Cloudflare Worker relay
+  async function shortenWithShortIoProxy(longUrl, linkTitle) {
     let proxyUrl = 'https://kpv-dub-proxy.tockppd.workers.dev/';
 
     let response = await fetch(proxyUrl, {
@@ -224,18 +223,18 @@
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        url: longUrl
+        url: longUrl,
+        title: linkTitle
       })
     });
 
     let data = await response.json();
 
     if (!response.ok) {
-      let errMsg = data.error ? (typeof data.error === 'string' ? data.error : data.error.message) : "Proxy Request Failed";
+      let errMsg = data.error ? (typeof data.error === 'string' ? data.error : data.error.message) : "Shortener Request Failed";
       throw new Error(errMsg);
     }
 
-    // Returns Dub's generated short link
     return data.shortLink;
   }
 
