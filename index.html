@@ -177,7 +177,7 @@
 </div>
 
 <script>
-  async function generateLink() {
+  function generateLink() {
     let rawDigits = document.getElementById('phoneNum').value.trim().replace(/[^0-9]/g, '');
     let message = document.getElementById('message').value.trim();
     let media = document.getElementById('media').value.trim();
@@ -198,27 +198,44 @@
 
     document.getElementById('genBtn').innerText = "Generating Short Link...";
 
-    try {
-      // TinyURL Plain API Call (Native CORS support for browser fetch)
-      let response = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(finalWaUrl)}`);
+    // Use JSONP via is.gd (Bypasses all CORS blocks permanently)
+    let script = document.createElement('script');
+    
+    // Create unique callback function name
+    let callbackName = 'isgd_callback_' + Math.round(100000 * Math.random());
+    
+    window[callbackName] = function(data) {
+      document.getElementById('genBtn').innerText = "Generate Short Link";
       
-      if (!response.ok) {
-        throw new Error("Shortening request failed");
+      if (data.shorturl) {
+        document.getElementById('outputUrl').innerText = data.shorturl;
+        document.getElementById('testBtn').href = data.shorturl;
+        document.getElementById('outputSection').style.display = 'block';
+      } else {
+        alert("Notice: Could not shorten automatically. Fallback to full wa.me link.");
+        document.getElementById('outputUrl').innerText = finalWaUrl;
+        document.getElementById('testBtn').href = finalWaUrl;
+        document.getElementById('outputSection').style.display = 'block';
       }
+      
+      // Cleanup script tag & callback
+      document.body.removeChild(script);
+      delete window[callbackName];
+    };
 
-      let shortUrl = await response.text();
-      document.getElementById('outputUrl').innerText = shortUrl;
-      document.getElementById('testBtn').href = shortUrl;
-      document.getElementById('outputSection').style.display = 'block';
-    } catch (err) {
-      console.error(err);
-      alert("Error: " + err.message + "\n\nFallback to full wa.me link.");
+    script.src = `https://is.gd/create.php?format=json&callback=${callbackName}&url=${encodeURIComponent(finalWaUrl)}`;
+    
+    script.onerror = function() {
+      document.getElementById('genBtn').innerText = "Generate Short Link";
+      alert("Notice: Service reached error. Fallback to full wa.me link.");
       document.getElementById('outputUrl').innerText = finalWaUrl;
       document.getElementById('testBtn').href = finalWaUrl;
       document.getElementById('outputSection').style.display = 'block';
-    } finally {
-      document.getElementById('genBtn').innerText = "Generate Short Link";
-    }
+      document.body.removeChild(script);
+      delete window[callbackName];
+    };
+
+    document.body.appendChild(script);
   }
 
   function copyLink() {
