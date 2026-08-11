@@ -177,9 +177,6 @@
 </div>
 
 <script>
-  // 🔑 Your Dub.co API Key
-  const DUB_API_KEY = "dub_iV89cpeGxCzk78D73Yo2BIKc"; 
-
   async function generateLink() {
     let rawDigits = document.getElementById('phoneNum').value.trim().replace(/[^0-9]/g, '');
     let message = document.getElementById('message').value.trim();
@@ -202,13 +199,13 @@
     document.getElementById('genBtn').innerText = "Generating Short Link...";
 
     try {
-      let shortUrl = await shortenWithDub(finalWaUrl);
+      let shortUrl = await shortenWithDubProxy(finalWaUrl);
       document.getElementById('outputUrl').innerText = shortUrl;
       document.getElementById('testBtn').href = shortUrl;
       document.getElementById('outputSection').style.display = 'block';
     } catch (err) {
       console.error(err);
-      alert("Dub.co API Error: " + err.message + "\n\nFallback to full wa.me link.");
+      alert("Error: " + err.message + "\n\nFallback to full wa.me link.");
       document.getElementById('outputUrl').innerText = finalWaUrl;
       document.getElementById('testBtn').href = finalWaUrl;
       document.getElementById('outputSection').style.display = 'block';
@@ -217,27 +214,28 @@
     }
   }
 
-  async function shortenWithDub(longUrl) {
-    // Official Dub.co API V2 Endpoint
-    let response = await fetch('https://api.dub.co/links', {
+  async function shortenWithDubProxy(longUrl) {
+    // Calling your brand new Cloudflare Worker relay
+    let proxyUrl = 'https://kpv-dub-proxy.tockppd.workers.dev/';
+
+    let response = await fetch(proxyUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${DUB_API_KEY}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        url: longUrl,
-        domain: "dub.sh" // Default Dub.co short domain
+        url: longUrl
       })
     });
 
     let data = await response.json();
 
     if (!response.ok) {
-      let errMsg = data.error ? data.error.message : "API Call Failed";
+      let errMsg = data.error ? (typeof data.error === 'string' ? data.error : data.error.message) : "Proxy Request Failed";
       throw new Error(errMsg);
     }
 
+    // Returns Dub's generated short link
     return data.shortLink;
   }
 
